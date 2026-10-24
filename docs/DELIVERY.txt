@@ -1,0 +1,20 @@
+Stroll 0.2.3 — v2 Windows preview
+
+Build: ./build.ps1 -Test
+Run: dist/Stroll.exe (keep Stroll.exe.config beside it)
+Desktop validation: ./test-desktop.ps1 -Performance
+
+John default, built-in and named saved pets, 1-5 pets chosen by checkboxes, optional
+shared-duration fades, draggable rounded reminder with saved bounded position.
+Existing v1 settings preserve their artwork and timing choices.
+
+Windows Roslyn build and core/desktop harnesses passed. See docs/TESTING.md
+for executed checks and remaining physical sleep/wake, startup, DPI and monitor
+acceptance checks. CPU/RAM samples and limits are in docs/PERFORMANCE.md.
+The executable remains an unsigned preview. Nothing has been published.
+
+Pet deletion is available in both selection and artwork tabs. Imported files are
+retained; bundled entries can be restored. John and imported J-Yosef are distinct.
+
+Manual launch registers a Start-menu shortcut for Windows pinning. Reopening
+Stroll from a shortcut shows existing settings instead of an already-running alert.
