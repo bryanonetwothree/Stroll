@@ -1,0 +1,11 @@
+/dist/
+/bin/
+/obj/
+*.user
+*.suo
+.vs/
+
+/release/
+/preview-v1/
+*.zip
+
