@@ -19,9 +19,9 @@ The generated sheet was separated into cells, resized for the renderer, and pack
 For your own pet, import only files you have permission to use. A file that is acceptable for private use is not automatically licensed for public bundling. Do not commit someone else's film/book/game character artwork to this repository without the relevant permission.
 
 
-## V2 pets
+## Bundled pets in V3
 
-V2 also embeds the supplied generated John and Smooth St Bernard walking and
+V2 embedded the supplied generated John and Smooth St Bernard walking and
 jumping poses. Their original prompts and provenance are under `assets/pets/`.
 The same bundled-art permission above applies to these contributed assets.
 
@@ -29,6 +29,9 @@ The same bundled-art permission above applies to these contributed assets.
   `walk-a.png`, `walk-passing.png`, and `walk-b.png`; `John-jumping.png` is the hop pose.
   The supplied `John-walking.gif` is empty and is not used by the app.
 - Smooth St Bernard: `walking.gif` and `jumping.png` from its asset folder.
+- J-Yosef: `assets/pets/j-yosef/walking.gif` and `jumping.png` are the supplied generated artwork, with editing notes and prompt alongside them.
+
+Mudkip is not bundled because it is a Pokémon character. Dorae is not bundled because its supplied robot-cat design closely resembles Doraemon. Other downloaded copies of those images remain user's own local files and are not part of this release.
 
 Only these runtime assets are embedded; source sheets and reference documentation
 are not loaded by the application.

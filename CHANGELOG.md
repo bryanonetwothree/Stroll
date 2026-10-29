@@ -1,5 +1,10 @@
 # Changes
 
+## 0.3.0 - V3 preview - 2026-10-30
+- Added bundled J-Yosef as a built-in pet alongside John, S-Yosef and Smooth St Bernard. Mudkip and Dorae are not bundled because of character-rights concerns.
+- Set new and unchanged default break backgrounds to #F2EAAA and added a one-click default-colour reset that also clears a background image.
+- Added a language picker in the header, visible on all four settings tabs, with English and Cantonese (Hong Kong) UI translations.
+
 ## 0.2.4 preview - 2026-10-24
 
 - Named saved pets and a checkbox list for mixed pets, with 1-5 pets on screen.

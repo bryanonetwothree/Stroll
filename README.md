@@ -2,7 +2,7 @@
 
 A small native Windows eye-break companion. Work for a while, look away for a while, and let John the cartoon St Bernard take a stroll.
 
-**Version 0.2.4 — v2 preview.** Windows 10/11 with .NET Framework 4.8. No browser runtime, NuGet dependencies, accounts, telemetry, keyboard/mouse hooks or activity detection. The app itself makes no network requests.
+**Version 0.3.0 — v3 preview.** Windows 10/11 with .NET Framework 4.8. No browser runtime, NuGet dependencies, accounts, telemetry, keyboard/mouse hooks or activity detection. The app itself makes no network requests.
 
 ## Run
 
@@ -38,11 +38,12 @@ You do not need to move the mouse to keep the clock running. Warning lead time a
 ## Personalise
 
 - Full colour wheel with brightness control and hex entry, or upload a background image. Images fill/crop to each screen. The central reminder has a solid panel for legibility.
-- John is the default for new settings. Choose John, S-Yosef, Smooth St Bernard, or a saved pet in **Pet presets**, then **Edit selected** to edit its artwork. Choose the pets to display using the checkboxes under **Pets on screen**. Existing settings keep their artwork; names update automatically (Yosef to J-Yosef, Bernie to S-Yosef); the bundled John stays John.
+- John is the default for new settings. Choose John, S-Yosef, J-Yosef, Smooth St Bernard, or a saved pet in **Pet presets**, then **Edit selected** to edit its artwork. Choose the pets to display using the checkboxes under **Pets on screen**. Existing settings keep their artwork; names update automatically (Yosef to J-Yosef, Bernie to S-Yosef); the bundled John stays John. Mudkip and Dorae are not bundled due to character-rights concerns.
 - Give imported artwork a name and click **Save named pet** to add or update a preset. Finish with **Save settings** to keep it for later. Presets remember name, walking artwork, and optional jump artwork; count, size, speed and path stay independent.
 - Select a pet and click **Delete pet** in **Pet & path**, or **Delete selected** in **Pets on screen**. Finish with **Save settings**. Deletion removes its entry and screen selection, retaining imported artwork files. Bundled pets can be brought back with **Restore built-ins**. At least one pet stays available.
 - Choose **1–5 pets on screen**. Check which built-in or saved pets appear together in **Pets on screen**. The total count grows to fit your checked choices; extra copies repeat those pets. Copies of the same artwork share decoded images and follow the path at staggered positions.
 - Turn the gentle fades on or off and use one **Fade in / out duration** slider (0.1 to 3 seconds per direction) in **Break screen**. Drag the rounded reminder by its text or empty space; its last primary-screen position is saved and clamped to the available screen. Preview positions remain in the draft until you save.
+- The default solid break-screen background is `#F2EAAA`. **Set to default** restores it and clears any background image. Use the globe button at the upper right to switch between English and Cantonese (Hong Kong); the choice applies across all four settings tabs and the break screens.
 - Rename your pet; import a PNG/JPG/BMP or animated GIF. Right-facing art with a transparent background looks best. Static art has a gentle bob. GIF frame timings are respected, with a minimum frame duration of 40 ms.
 - Optionally import a separate jumping image/GIF. With a custom pet and no jump file, its main image/animation follows the hop arc. A custom pet never intentionally uses S-Yosef's jump pose.
 - Select **Bottom, Right, Top, Left**, any combination. Pet rotates onto walls and upside down at the top. One edge or adjacent edges form a back-and-forth path. All four make a loop. Opposite edges use a visible hop across the screen.
