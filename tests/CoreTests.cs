@@ -69,9 +69,10 @@ public static class CoreTests
         }
         var invalid = new Settings { WorkMinutes = double.NaN, Edges = 0, BackgroundColor = "nonsense", PetSize = 999 };
         invalid.Validate(); Near(invalid.WorkMinutes, 20, "Invalid duration repaired");
-        Check(invalid.Edges == 1 && invalid.PetSize == 300 && invalid.BackgroundColor == "#172B29", "Invalid settings repaired");
+        Check(invalid.Edges == 1 && invalid.PetSize == 300 && invalid.BackgroundColor == Settings.DefaultBackgroundColor, "Invalid settings repaired");
         var fresh = new Settings();
-        Check(fresh.PetName == "John" && fresh.WalkImage == "builtin:john" && fresh.PetCount == 1 && fresh.FadeEnabled, "V2 defaults");
+        Check(fresh.PetName == "John" && fresh.WalkImage == "builtin:john" && fresh.BackgroundColor == Settings.DefaultBackgroundColor && fresh.Language == "en" && fresh.PetCount == 1 && fresh.FadeEnabled, "V3 defaults");
+        Check(Settings.BuiltInPets().Any(pet => pet.Name == "J-Yosef" && pet.WalkImage == "builtin:jyosef") && !Settings.BuiltInPets().Any(pet => pet.Name == "Mudkip" || pet.Name == "Dorae"), "V3 built-ins exclude protected characters");
         fresh.SavePet("My John"); var copy = fresh.Copy(); copy.Pets[0].Name = "Draft only";
         Check(fresh.Pets[0].Name == "My John", "Draft preset edits are isolated");
         fresh.SavePet("my john"); Check(fresh.Pets.Count == 1, "Named preset update is case insensitive");
@@ -88,7 +89,7 @@ public static class CoreTests
         using (var stream = new MemoryStream(Encoding.UTF8.GetBytes("{\"PetName\":\"Bernie\",\"WalkImage\":\"\",\"JumpImage\":\"\",\"WorkMinutes\":25}")))
         {
             var legacy = (Settings)serializer.ReadObject(stream); legacy.Validate();
-            Check(legacy.PetName == "S-Yosef" && legacy.WalkImage == "" && legacy.WorkMinutes == 25 && legacy.PetCount == 1 && legacy.FadeEnabled && legacy.CardX == -1 && legacy.Pets.Count == 0, "V1 migration preserves user choices");
+            Check(legacy.PetName == "S-Yosef" && legacy.WalkImage == "" && legacy.WorkMinutes == 25 && legacy.PetCount == 1 && legacy.FadeEnabled && legacy.BackgroundColor == Settings.DefaultBackgroundColor && legacy.Language == "en" && legacy.CardX == -1 && legacy.Pets.Count == 0, "V1 migration preserves user choices with V3 defaults");
         }
         fresh.PetCount = 99; fresh.Validate(); Check(fresh.PetCount == 5, "Pet count upper limit");
         fresh.PetCount = 0; fresh.Validate(); Check(fresh.PetCount == 1, "Pet count lower limit");
