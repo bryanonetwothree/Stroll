@@ -16,7 +16,7 @@
     <Reference Include="System"/><Reference Include="System.Core"/><Reference Include="System.Drawing"/>
     <Reference Include="System.Windows.Forms"/><Reference Include="System.Runtime.Serialization"/>
     <Compile Include="App.cs"/><Compile Include="Art.cs"/><Compile Include="AssemblyInfo.cs"/>
-    <Compile Include="Core.cs"/><Compile Include="Overlay.cs"/><Compile Include="Settings.cs"/>
+    <Compile Include="Core.cs"/><Compile Include="Locale.cs"/><Compile Include="Overlay.cs"/><Compile Include="Settings.cs"/>
     <Compile Include="SettingsForm.cs"/><Compile Include="Ui.cs"/><Compile Include="WindowsShortcuts.cs"/>
     <EmbeddedResource Include="..\..\assets\walk.png"><LogicalName>Stroll.walk.png</LogicalName></EmbeddedResource>
     <EmbeddedResource Include="..\..\assets\jump.png"><LogicalName>Stroll.jump.png</LogicalName></EmbeddedResource>
@@ -24,6 +24,9 @@
     <EmbeddedResource Include="..\..\assets\pets\john\John-jumping.png"><LogicalName>Stroll.john.jump.png</LogicalName></EmbeddedResource>
     <EmbeddedResource Include="..\..\assets\pets\smooth-saint-bernard\walking.gif"><LogicalName>Stroll.smooth.walk.gif</LogicalName></EmbeddedResource>
     <EmbeddedResource Include="..\..\assets\pets\smooth-saint-bernard\jumping.png"><LogicalName>Stroll.smooth.jump.png</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="..\..\assets\pets\j-yosef\walking.gif"><LogicalName>Stroll.jyosef.walk.gif</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="..\..\assets\pets\j-yosef\jumping.png"><LogicalName>Stroll.jyosef.jump.png</LogicalName></EmbeddedResource>
+    <None Include="..\..\assets\pets\j-yosef\README.txt"/><None Include="..\..\assets\pets\j-yosef\PROMPT.txt"/>
     <None Include="app.manifest"/>
     <None Include="Stroll.exe.config"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
   </ItemGroup>

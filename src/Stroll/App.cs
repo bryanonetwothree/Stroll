@@ -49,6 +49,7 @@ namespace Stroll
         private readonly Control dispatcher = new Control();
         private NotifyIcon tray;
         private ToolStripMenuItem statusItem, pauseItem;
+        private ToolStripMenuItem breakItem, restartItem, settingsItem, exitItem;
         private PromptForm prompt;
         private SettingsForm settingsForm;
         private readonly List<BreakOverlay> closingOverlays = new List<BreakOverlay>();
@@ -64,21 +65,21 @@ namespace Stroll
             var menu = new ContextMenuStrip();
             statusItem = new ToolStripMenuItem { Enabled = false }; menu.Items.Add(statusItem);
             menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add("Take a break now", null, (s, e) => { if (!previewing) clock.StartBreak(); });
+            breakItem = new ToolStripMenuItem("Take a break now", null, (s, e) => { if (!previewing) clock.StartBreak(); }); menu.Items.Add(breakItem);
             pauseItem = new ToolStripMenuItem("Pause", null, (s, e) =>
             { if (previewing) return; if (clock.Phase == Phase.Paused) clock.Resume(); else clock.Pause(); });
             menu.Items.Add(pauseItem);
-            menu.Items.Add("Restart work interval", null, (s, e) => { if (!previewing) clock.FreshInterval(); });
-            menu.Items.Add("Settings…", null, (s, e) => OpenSettings());
+            restartItem = new ToolStripMenuItem("Restart work interval", null, (s, e) => { if (!previewing) clock.FreshInterval(); }); menu.Items.Add(restartItem);
+            settingsItem = new ToolStripMenuItem("Settings…", null, (s, e) => OpenSettings()); menu.Items.Add(settingsItem);
             menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add("Exit", null, (s, e) => ExitThread());
+            exitItem = new ToolStripMenuItem("Exit", null, (s, e) => ExitThread()); menu.Items.Add(exitItem);
             tray = new NotifyIcon { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath), Text = "Stroll", Visible = true, ContextMenuStrip = menu };
             tray.DoubleClick += (s, e) => OpenSettings();
             clock.Changed += Synchronize;
             clock.Warning += () =>
             {
-                tray.BalloonTipTitle = "A little rest is coming";
-                tray.BalloonTipText = "Your break prompt will appear in " + (int)Math.Ceiling(clock.Remaining) + " seconds.";
+                tray.BalloonTipTitle = Locale.T("A little rest is coming", settings.Language);
+                tray.BalloonTipText = Locale.T("Your break prompt will appear in ", settings.Language) + (int)Math.Ceiling(clock.Remaining) + Locale.T(" seconds.", settings.Language);
                 tray.ShowBalloonTip(5000);
             };
             heartbeat.Tick += (s, e) => { if (suspended) return; clock.Tick(); UpdateStatus(); }; heartbeat.Start();
@@ -90,6 +91,10 @@ namespace Stroll
             if (!quiet) dispatcher.BeginInvoke(new Action(OpenSettings));
         }
         public string StatusText()
+        {
+            return Locale.T(StatusTextEnglish(), settings.Language);
+        }
+        public string StatusTextEnglish()
         {
             string time = TimeSpan.FromSeconds(Math.Ceiling(clock.Remaining)).ToString(@"hh\:mm\:ss");
             switch (clock.Phase)
@@ -105,7 +110,10 @@ namespace Stroll
         {
             string text = StatusText(); statusItem.Text = text;
             tray.Text = ("Stroll · " + text).Substring(0, Math.Min(63, ("Stroll · " + text).Length));
-            pauseItem.Text = clock.Phase == Phase.Paused ? "Resume" : "Pause";
+            breakItem.Text = Locale.T("Take a break now", settings.Language);
+            pauseItem.Text = Locale.T(clock.Phase == Phase.Paused ? "Resume" : "Pause", settings.Language);
+            restartItem.Text = Locale.T("Restart work interval", settings.Language);
+            settingsItem.Text = Locale.T("Settings…", settings.Language); exitItem.Text = Locale.T("Exit", settings.Language);
         }
         private void Synchronize()
         {
@@ -121,7 +129,7 @@ namespace Stroll
             if (phase == Phase.Breaking && overlays.Count == 0)
                 OpenOverlays(settings, false, () => clock.Remaining, clock.Snooze, clock.Skip);
             if (previousPhase == Phase.Breaking && phase == Phase.Working)
-            { tray.BalloonTipTitle = "Ready when you are"; tray.BalloonTipText = "Your next work interval has started."; tray.ShowBalloonTip(3000); }
+            { tray.BalloonTipTitle = Locale.T("Ready when you are", settings.Language); tray.BalloonTipText = Locale.T("Your next work interval has started.", settings.Language); tray.ShowBalloonTip(3000); }
             previousPhase = phase; UpdateStatus();
         }
         private void OpenSettings()
@@ -129,7 +137,7 @@ namespace Stroll
             if (previewing) return;
             if (settingsForm != null && !settingsForm.IsDisposed)
             { settingsForm.WindowState = FormWindowState.Normal; settingsForm.Show(); settingsForm.Activate(); return; }
-            settingsForm = new SettingsForm(settings, SaveSettings, Preview, StatusText);
+            settingsForm = new SettingsForm(settings, SaveSettings, Preview, StatusTextEnglish);
             settingsForm.Show(); settingsForm.Activate();
         }
         private void SaveSettings(Settings next)
@@ -235,13 +243,15 @@ namespace Stroll
             FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false;
             StartPosition = FormStartPosition.CenterScreen; TopMost = true;
             BackColor = Ui.Paper; ForeColor = Ui.Ink; Font = new Font("Segoe UI", 10); AutoScaleMode = AutoScaleMode.Dpi;
-            var heading = new Label { Text = "A little distance. A little rest.", Location = new Point(28, 24), Size = new Size(480, 44), Font = new Font("Segoe UI", 21, FontStyle.Bold) };
-            var body = new Label { Text = "Ready for a " + settings.BreakMinutes + "-minute eye break?\n" + string.Join(", ", settings.VisiblePets().Select(pet => pet.Name).Distinct()) + " will keep you company.", Location = new Point(30, 87), Size = new Size(460, 66) };
+            var heading = new Label { Text = Locale.T("A little distance. A little rest.", settings.Language), Location = new Point(28, 24), Size = new Size(480, 44), Font = new Font("Segoe UI", 21, FontStyle.Bold) };
+            string petNames = string.Join(", ", settings.VisiblePets().Select(pet => pet.Name).Distinct());
+            var body = new Label { Text = Locale.IsCantonese(settings.Language) ? "準備休息 " + settings.BreakMinutes + " 分鐘，讓眼睛放鬆嗎？\n" + petNames + " 會陪伴你。" : "Ready for a " + settings.BreakMinutes + "-minute eye break?\n" + petNames + " will keep you company.", Location = new Point(30, 87), Size = new Size(460, 66) };
             var actions = new FlowLayoutPanel { Location = new Point(24, 185), Size = new Size(490, 60), WrapContents = false };
             var start = Ui.Button("Break", begin, true); actions.Controls.Add(start);
-            actions.Controls.Add(Ui.Button("Snooze " + settings.SnoozeMinutes + " min", snooze));
-            actions.Controls.Add(Ui.Button("Skip", skip));
+            actions.Controls.Add(Ui.Button(Locale.T("Snooze " + settings.SnoozeMinutes + " min", settings.Language), snooze));
+            actions.Controls.Add(Ui.Button(Locale.T("Skip", settings.Language), skip));
             Controls.AddRange(new Control[] { heading, body, actions }); AcceptButton = start;
+            Locale.Apply(this, settings.Language);
             KeyPreview = true; KeyDown += (s, e) => { if (e.KeyCode == Keys.Escape) { e.Handled = true; snooze(); } };
             FormClosing += (s, e) => { if (!intentionalClose) { e.Cancel = true; snooze(); } };
         }

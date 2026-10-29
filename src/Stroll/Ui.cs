@@ -80,7 +80,7 @@ namespace Stroll
     public sealed class PaletteDialog : Form
     {
         public Color Selection { get; private set; }
-        public PaletteDialog(Color initial)
+        public PaletteDialog(Color initial, string language = "en")
         {
             Text = "Choose a background colour"; ClientSize = new Size(430, 340); BackColor = Ui.Paper;
             Font = new Font("Segoe UI", 10); StartPosition = FormStartPosition.CenterParent;
@@ -90,16 +90,17 @@ namespace Stroll
             var hex = new TextBox { Location = new Point(270, 152), Width = 130, Text = ColorTranslator.ToHtml(initial) };
             var brightness = new TrackBar { Location = new Point(20, 260), Width = 240, Minimum = 0, Maximum = 100,
                 Value = (int)(wheel.Brightness * 100), TickStyle = TickStyle.None };
-            var label = new Label { Text = "Brightness", Location = new Point(25, 238), AutoSize = true };
+            var label = new Label { Text = Locale.T("Brightness", language), Location = new Point(25, 238), AutoSize = true };
             wheel.Changed += () => { swatch.BackColor = wheel.Selection; hex.Text = ColorTranslator.ToHtml(wheel.Selection); };
             brightness.ValueChanged += (s, e) => wheel.Brightness = brightness.Value / 100.0;
-            var use = Ui.Button("Use colour", () =>
+            var use = Ui.Button(Locale.T("Use colour", language), () =>
             {
                 try { Selection = ColorTranslator.FromHtml(hex.Text); if (Selection.IsEmpty) throw new ArgumentException(); DialogResult = DialogResult.OK; }
-                catch { MessageBox.Show(this, "Enter a colour such as #172B29.", "Choose a colour"); }
+                catch { MessageBox.Show(this, Locale.T("Enter a colour such as #172B29.", language), Locale.T("Choose a colour", language)); }
             }, true);
             use.Location = new Point(270, 270); AcceptButton = use;
             Controls.AddRange(new Control[] { wheel, swatch, hex, brightness, label, use });
+            Text = Locale.T(Text, language);
         }
     }
 }

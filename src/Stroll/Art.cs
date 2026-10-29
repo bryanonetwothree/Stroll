@@ -21,9 +21,9 @@ namespace Stroll
             IsBuiltIn = string.IsNullOrWhiteSpace(path) || path.StartsWith("builtin:") || !File.Exists(path);
             if (IsBuiltIn)
             {
-                string pet = path == "builtin:john" ? "john" : path == "builtin:smooth" ? "smooth" : "";
+                string pet = path == "builtin:john" ? "john" : path == "builtin:smooth" ? "smooth" : path == "builtin:jyosef" ? "jyosef" : "";
                 string name = pet.Length == 0 ? (jump ? "Stroll.jump.png" : "Stroll.walk.png") :
-                    "Stroll." + pet + (jump ? ".jump.png" : pet == "john" ? ".walk.png" : ".walk.gif");
+                    "Stroll." + pet + (jump ? ".jump.png" : pet == "john" ? ".walk.png" : pet == "smooth" ? ".walk.gif" : ".walk.gif");
                 using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name))
                 {
                     if (stream == null) throw new FileNotFoundException("Missing bundled pet artwork: " + name);
@@ -64,21 +64,21 @@ namespace Stroll
         }
         public void Dispose() { image.Dispose(); bytes.Dispose(); }
 
-        public static string Import(string source, bool background)
+        public static string Import(string source, bool background, string language = "en")
         {
             var info = new FileInfo(source);
-            if (info.Length > 20 * 1024 * 1024) throw new ArgumentException("Choose a file smaller than 20 MB.");
+            if (info.Length > 20 * 1024 * 1024) throw new ArgumentException(Locale.T("Choose a file smaller than 20 MB.", language));
             using (var image = Image.FromFile(source))
             {
                 if (image.Width > 8192 || image.Height > 8192 || (long)image.Width * image.Height > 24000000)
-                    throw new ArgumentException("Choose an image no larger than 24 megapixels and 8192 pixels per side.");
+                    throw new ArgumentException(Locale.T("Choose an image no larger than 24 megapixels and 8192 pixels per side.", language));
                 if (!background && (image.Width > 2048 || image.Height > 2048))
-                    throw new ArgumentException("Pet images must be 2048 pixels per side or smaller.");
+                    throw new ArgumentException(Locale.T("Pet images must be 2048 pixels per side or smaller.", language));
                 int count = 1;
                 if (Array.IndexOf(image.FrameDimensionsList, FrameDimension.Time.Guid) >= 0)
                     count = image.GetFrameCount(FrameDimension.Time);
                 if ((long)image.Width * image.Height * count > 64000000)
-                    throw new ArgumentException("This animation is too large. Reduce its resolution or number of frames.");
+                    throw new ArgumentException(Locale.T("This animation is too large. Reduce its resolution or number of frames.", language));
             }
             string folder = Path.Combine(Settings.Folder, "assets"); Directory.CreateDirectory(folder);
             string dest = Path.Combine(folder, Guid.NewGuid().ToString("N") + Path.GetExtension(source).ToLowerInvariant());

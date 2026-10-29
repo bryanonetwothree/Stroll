@@ -11,6 +11,8 @@ namespace Stroll
     {
         private readonly Settings draft;
         private readonly Action<Settings> save;
+        private readonly Action<Settings> preview;
+        private readonly Func<string> getStatus;
         private NumericUpDown work, rest, snooze, warning, size, speed, count;
         private CheckBox warn, startup, fade;
         private ComboBox presets;
@@ -21,10 +23,12 @@ namespace Stroll
         private TextBox name, message;
         private Label walkFile, jumpFile, backgroundFile, status;
         private Button colour;
+        private Button languageButton;
+        private TabControl tabs;
         private Timer statusTimer = new Timer { Interval = 1000 };
         public SettingsForm(Settings current, Action<Settings> save, Action<Settings> preview, Func<string> getStatus)
         {
-            draft = current.Copy(); this.save = save;
+            draft = current.Copy(); this.save = save; this.preview = preview; this.getStatus = getStatus;
             Text = "Stroll · A little space for your eyes";
             ClientSize = new Size(820, 650); MinimumSize = new Size(780, 650);
             AutoScaleMode = AutoScaleMode.Dpi; StartPosition = FormStartPosition.CenterScreen;
@@ -33,17 +37,39 @@ namespace Stroll
 
             var header = new Panel { Dock = DockStyle.Top, Height = 122, Padding = new Padding(28, 16, 28, 8), BackColor = Ui.Ink };
             var title = new Label { Text = "stroll", Dock = DockStyle.Top, Height = 53, Font = new Font("Segoe UI", 30, FontStyle.Bold), ForeColor = Color.FromArgb(239, 235, 218) };
-            status = new Label { Text = getStatus(), Dock = DockStyle.Top, Height = 29, ForeColor = Color.FromArgb(172, 211, 197) };
+            status = new Label { Text = Locale.T(getStatus(), draft.Language), Dock = DockStyle.Top, Height = 29, ForeColor = Color.FromArgb(172, 211, 197) };
             header.Controls.Add(status); header.Controls.Add(title);
-            var tabs = new TabControl { Dock = DockStyle.Fill, Padding = new Point(20, 9) };
+            languageButton = new Button { Text = Locale.LanguageButton(draft.Language), Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Location = new Point(ClientSize.Width - 180, 23), Size = new Size(132, 36), FlatStyle = FlatStyle.Flat,
+                BackColor = Ui.Ink, ForeColor = Color.White, Cursor = Cursors.Hand, Font = new Font("Segoe UI", 10) };
+            languageButton.FlatAppearance.BorderSize = 0; languageButton.Click += (s, e) => ChooseLanguage(); header.Controls.Add(languageButton); languageButton.BringToFront();
+            tabs = new TabControl { Dock = DockStyle.Fill, Padding = new Point(20, 9) };
             var timings = Page(tabs, "Timing"); var appearance = Page(tabs, "Break screen"); var roster = Page(tabs, "Pets on screen"); var pet = Page(tabs, "Pet && path");
             BuildTiming(timings); BuildAppearance(appearance); BuildPet(pet); BuildRoster(roster);
             var footer = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 69, Padding = new Padding(20, 12, 12, 8), FlowDirection = FlowDirection.RightToLeft };
             footer.Controls.Add(Ui.Button("Save settings", Save, true));
-            footer.Controls.Add(Ui.Button("Preview break", () => { if (ReadDraft()) preview(draft.Copy()); }));
+            footer.Controls.Add(Ui.Button("Preview break", () => { if (ReadDraft()) this.preview(draft.Copy()); }));
             footer.Controls.Add(Ui.Button("Close", Close));
             Controls.Add(tabs); Controls.Add(footer); Controls.Add(header);
-            statusTimer.Tick += (s, e) => status.Text = getStatus(); statusTimer.Start();
+            Locale.Apply(this, draft.Language); languageButton.Text = Locale.LanguageButton(draft.Language); RefreshColour(); RefreshFiles();
+            statusTimer.Tick += (s, e) => status.Text = Locale.T(this.getStatus(), draft.Language); statusTimer.Start();
+        }
+        private void ChooseLanguage()
+        {
+            var menu = new ContextMenuStrip();
+            menu.Items.Add("English", null, (s, e) => SetLanguage(Locale.English));
+            menu.Items.Add("廣東話（香港）", null, (s, e) => SetLanguage(Locale.CantoneseHongKong));
+            menu.Show(languageButton, new Point(0, languageButton.Height));
+        }
+        private void SetLanguage(string language)
+        {
+            if (draft.Language == language) return;
+            CaptureDraft();
+            draft.Language = language;
+            var selectedTab = tabs.SelectedIndex;
+            var replacement = new SettingsForm(draft, save, preview, getStatus);
+            replacement.tabs.SelectedIndex = Math.Max(0, Math.Min(selectedTab, replacement.tabs.TabPages.Count - 1));
+            replacement.Show(); replacement.Activate(); Close();
         }
         private TableLayoutPanel Page(TabControl tabs, string title)
         {
@@ -90,7 +116,7 @@ namespace Stroll
                     System.Diagnostics.Process.Start("explorer.exe", "/select,\"" + WindowsShortcuts.StartMenuPath + "\"");
                 }
                 catch (Exception error) when (error is IOException || error is UnauthorizedAccessException || error is System.Runtime.InteropServices.COMException || error is System.ComponentModel.Win32Exception)
-                { MessageBox.Show(this, "Could not add the shortcut. " + error.Message, "Start menu"); }
+                { MessageBox.Show(this, Locale.T("Could not add the shortcut. ", draft.Language) + error.Message, Locale.T("Start menu", draft.Language)); }
             }));
             Note(table, "In Start, search for Stroll and right-click to pin to Start or taskbar.\nA pinned launch opens settings even when Stroll is already in the tray.", 64);
             Note(table, "Snooze asks again later. Skip starts a fresh work interval.\nSleep/wake starts fresh. Pause is manual; there is no activity monitoring.", 67);
@@ -101,22 +127,22 @@ namespace Stroll
             Row(table, "Transitions", fade);
             fadeDuration = new TrackBar { Minimum = 1, Maximum = 30, Value = Math.Max(1, Math.Min(30, draft.FadeMilliseconds / 100)), TickFrequency = 5, Height = 36, Enabled = fade.Checked };
             var duration = new Label { Dock = DockStyle.Bottom, Height = 22, TextAlign = ContentAlignment.MiddleLeft };
-            Action refreshDuration = () => duration.Text = (fadeDuration.Value / 10.0).ToString("0.0") + " seconds each way";
+            Action refreshDuration = () => duration.Text = Locale.T((fadeDuration.Value / 10.0).ToString("0.0") + " seconds each way", draft.Language);
             refreshDuration(); fadeDuration.ValueChanged += (sender, args) => refreshDuration();
             fade.CheckedChanged += (sender, args) => fadeDuration.Enabled = fade.Checked;
             var transition = new Panel { Height = 64 }; fadeDuration.Dock = DockStyle.Top;
             transition.Controls.Add(fadeDuration); transition.Controls.Add(duration);
             Row(table, "Fade in / out duration", transition, 78);
-            message = new TextBox { Text = draft.Message, MaxLength = 100 };
+            message = new TextBox { Text = Locale.BreakMessage(draft.Message, draft.Language), MaxLength = 100 };
             Row(table, "Break reminder", message);
             colour = Ui.Button("Choose colour…", () =>
             {
-                using (var dialog = new PaletteDialog(ColorTranslator.FromHtml(draft.BackgroundColor)))
+                using (var dialog = new PaletteDialog(ColorTranslator.FromHtml(draft.BackgroundColor), draft.Language))
                     if (dialog.ShowDialog(this) == DialogResult.OK)
-                    { draft.BackgroundColor = ColorTranslator.ToHtml(dialog.Selection); colour.Text = draft.BackgroundColor; }
+                    { draft.BackgroundColor = ColorTranslator.ToHtml(dialog.Selection); RefreshColour(); }
             });
-            colour.Text = draft.BackgroundColor + "  ·  Choose…";
-            Row(table, "Background colour", colour);
+            Row(table, "Background colour", Group(colour, Ui.Button("Set to default", () =>
+            { draft.BackgroundColor = Settings.DefaultBackgroundColor; draft.BackgroundImage = ""; RefreshColour(); RefreshFiles(); })), 50);
             Row(table, "Background image", Group(Ui.Button("Upload image…", () => Import(true, false)),
                 Ui.Button("Use solid colour", () => { draft.BackgroundImage = ""; RefreshFiles(); })), 52);
             backgroundFile = Ui.Label(""); Row(table, "Selected image", backgroundFile);
@@ -135,6 +161,7 @@ namespace Stroll
                 if (selected != null) { CaptureRoster(); draft.UsePet(selected); name.Text = draft.PetName; RefreshFiles(); RefreshRoster(); }
             }), Ui.Button("Save named pet", () => {
                 if (!ReadDraft()) return;
+                if (string.IsNullOrWhiteSpace(name.Text)) { MessageBox.Show(this, Locale.T("Give your pet a name first.", draft.Language), Locale.T("Save named pet", draft.Language)); return; }
                 draft.SavePet(name.Text); RefreshPresets(); RefreshRoster();
             }), Ui.Button("Delete pet", () => DeletePet(presets.SelectedItem as PetPreset))), 50);
             name = new TextBox { Text = draft.PetName, MaxLength = 40 }; Row(table, "Pet name", name);
@@ -183,7 +210,7 @@ namespace Stroll
         {
             if (pet == null) return;
             CaptureRoster();
-            if (!draft.DeletePet(pet)) { MessageBox.Show(this, "Keep at least one pet in your collection.", "Delete pet"); return; }
+            if (!draft.DeletePet(pet)) { MessageBox.Show(this, Locale.T("Keep at least one pet in your collection.", draft.Language), Locale.T("Delete pet", draft.Language)); return; }
             name.Text = draft.PetName; RefreshPresets(); RefreshRoster(); RefreshFiles();
         }
         private void RefreshRoster()
@@ -204,46 +231,59 @@ namespace Stroll
         }
         private void RefreshFiles()
         {
-            if (backgroundFile != null) backgroundFile.Text = string.IsNullOrEmpty(draft.BackgroundImage) ? "Solid colour" : Path.GetFileName(draft.BackgroundImage);
-            if (walkFile != null) walkFile.Text = string.IsNullOrEmpty(draft.WalkImage) ? "S-Yosef · original cartoon St Bernard" : draft.WalkImage.StartsWith("builtin:") ? draft.PetName + " · bundled" : Path.GetFileName(draft.WalkImage);
-            if (jumpFile != null) jumpFile.Text = string.IsNullOrEmpty(draft.JumpImage) ? (string.IsNullOrEmpty(draft.WalkImage) ? "S-Yosef's bundled jump pose" : "None · use main image during hop") : draft.JumpImage.StartsWith("builtin:") ? "Bundled jump pose" : Path.GetFileName(draft.JumpImage);
+            if (backgroundFile != null) backgroundFile.Text = Locale.T(string.IsNullOrEmpty(draft.BackgroundImage) ? "Solid colour" : Path.GetFileName(draft.BackgroundImage), draft.Language);
+            if (walkFile != null) walkFile.Text = string.IsNullOrEmpty(draft.WalkImage) ? (Locale.IsCantonese(draft.Language) ? "S-Yosef · 原創卡通聖伯納犬" : "S-Yosef · original cartoon St Bernard") : draft.WalkImage.StartsWith("builtin:") ? draft.PetName + (Locale.IsCantonese(draft.Language) ? " · 內置" : " · bundled") : Path.GetFileName(draft.WalkImage);
+            if (jumpFile != null)
+            {
+                string text = string.IsNullOrEmpty(draft.JumpImage) ? (string.IsNullOrEmpty(draft.WalkImage) ? "S-Yosef's bundled jump pose" : "None · use main image during hop") : draft.JumpImage.StartsWith("builtin:") ? "Bundled jump pose" : Path.GetFileName(draft.JumpImage);
+                jumpFile.Text = Locale.T(text, draft.Language);
+            }
+        }
+        private void RefreshColour()
+        {
+            if (colour != null) colour.Text = draft.BackgroundColor + "  ·  " + Locale.T("Choose colour…", draft.Language);
         }
         private void Import(bool background, bool jumping)
         {
-            using (var dialog = new OpenFileDialog { Title = background ? "Choose a background" : "Choose pet artwork", Filter = "Images|*.png;*.gif;*.jpg;*.jpeg;*.bmp" })
+            using (var dialog = new OpenFileDialog { Title = Locale.T(background ? "Choose a background" : "Choose pet artwork", draft.Language), Filter = Locale.T("Images", draft.Language) + "|*.png;*.gif;*.jpg;*.jpeg;*.bmp" })
             {
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
                 try
                 {
                     CaptureRoster();
-                    string path = PetArt.Import(dialog.FileName, background);
+                    string path = PetArt.Import(dialog.FileName, background, draft.Language);
                     if (background) draft.BackgroundImage = path;
                     else if (jumping) draft.JumpImage = path;
                     else { draft.WalkImage = path; draft.JumpImage = ""; name.Text = Path.GetFileNameWithoutExtension(dialog.FileName); }
                     draft.PetName = name.Text; RefreshFiles(); RefreshRoster();
                 }
                 catch (Exception ex) when (ex is IOException || ex is ArgumentException || ex is OutOfMemoryException || ex is System.Runtime.InteropServices.ExternalException)
-                { MessageBox.Show(this, "That image could not be imported. " + ex.Message, "Import image", MessageBoxButtons.OK, MessageBoxIcon.Information); }
+                { MessageBox.Show(this, Locale.T("That image could not be imported. ", draft.Language) + ex.Message, Locale.T("Import image", draft.Language), MessageBoxButtons.OK, MessageBoxIcon.Information); }
             }
         }
         private bool ReadDraft()
         {
             int mask = 0; for (int i = 0; i < 4; i++) if (edges[i].Checked) mask |= 1 << i;
-            if (mask == 0) { MessageBox.Show(this, "Choose at least one edge for your pet.", "Pet path"); return false; }
+            if (mask == 0) { MessageBox.Show(this, Locale.T("Choose at least one edge for your pet.", draft.Language), Locale.T("Pet path", draft.Language)); return false; }
+            if (screenPets.CheckedItems.Count == 0) { MessageBox.Show(this, Locale.T("Check at least one pet to show on screen.", draft.Language), Locale.T("Pets on screen", draft.Language)); return false; }
+            CaptureDraft(); draft.Validate(); return true;
+        }
+        private void CaptureDraft()
+        {
+            int mask = 0; for (int i = 0; i < 4; i++) if (edges[i].Checked) mask |= 1 << i;
             draft.Edges = mask; draft.WorkMinutes = (double)work.Value; draft.BreakMinutes = (double)rest.Value;
             draft.SnoozeMinutes = (double)snooze.Value; draft.WarningEnabled = warn.Checked; draft.WarningSeconds = (int)warning.Value;
             draft.StartWithWindows = startup.Checked; draft.PetSize = (int)size.Value; draft.PetSpeed = (int)speed.Value;
-            if (screenPets.CheckedItems.Count == 0) { MessageBox.Show(this, "Check at least one pet to show on screen.", "Pets on screen"); return false; }
             draft.ScreenPets = screenPets.CheckedItems.Cast<PetPreset>().Select(pet => pet.Copy()).ToList();
             draft.PetCount = Math.Max((int)count.Value, draft.ScreenPets.Count); count.Value = draft.PetCount;
             draft.FadeEnabled = fade.Checked; draft.FadeMilliseconds = fadeDuration.Value * 100;
-            draft.PetName = name.Text; draft.Message = message.Text; draft.Validate(); return true;
+            draft.PetName = name.Text; draft.Message = Locale.BreakMessage(message.Text, draft.Language);
         }
         private void Save()
         {
             if (!ReadDraft()) return;
             try { save(draft.Copy()); Close(); }
-            catch (Exception ex) { MessageBox.Show(this, "Could not save settings. " + ex.Message, "Save settings", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { MessageBox.Show(this, Locale.T("Could not save settings. ", draft.Language) + ex.Message, Locale.T("Save settings", draft.Language), MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
         protected override void Dispose(bool disposing)
         { if (disposing) statusTimer.Dispose(); base.Dispose(disposing); }

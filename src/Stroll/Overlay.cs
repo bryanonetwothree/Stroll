@@ -114,15 +114,15 @@ namespace Stroll
         private void CreateCard()
         {
             card = new Panel { Width = 620, Height = primary ? 270 : 190, BackColor = Color.FromArgb(24, 35, 36), Padding = new Padding(24) };
-            var title = new Label { Text = settings.Message, ForeColor = Color.White, Font = new Font("Segoe UI", 25, FontStyle.Bold), Dock = DockStyle.Top, Height = 88, TextAlign = ContentAlignment.MiddleCenter };
+            var title = new Label { Text = Locale.BreakMessage(settings.Message, settings.Language), ForeColor = Color.White, Font = new Font("Segoe UI", 25, FontStyle.Bold), Dock = DockStyle.Top, Height = 88, TextAlign = ContentAlignment.MiddleCenter };
             counter = new Label { ForeColor = Color.FromArgb(171, 215, 204), Font = new Font("Segoe UI", 32), Dock = DockStyle.Top, Height = 64, TextAlign = ContentAlignment.MiddleCenter };
-            var hint = new Label { Text = preview ? "PREVIEW · Esc to close" : "Let your gaze rest somewhere beyond the screen.", ForeColor = Color.FromArgb(188, 199, 197), Dock = DockStyle.Top, Height = 28, TextAlign = ContentAlignment.MiddleCenter };
+            var hint = new Label { Text = Locale.T(preview ? "PREVIEW · Esc to close" : "Let your gaze rest somewhere beyond the screen.", settings.Language), ForeColor = Color.FromArgb(188, 199, 197), Dock = DockStyle.Top, Height = 28, TextAlign = ContentAlignment.MiddleCenter };
             card.Controls.Add(hint); card.Controls.Add(counter); card.Controls.Add(title);
             if (primary)
             {
                 var actions = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 42, FlowDirection = FlowDirection.LeftToRight, WrapContents = false };
-                actions.Controls.Add(Ui.Button(preview ? "Close preview" : "Snooze " + settings.SnoozeMinutes + " min", snooze));
-                if (!preview) actions.Controls.Add(Ui.Button("Skip", skip));
+                actions.Controls.Add(Ui.Button(Locale.T(preview ? "Close preview" : "Snooze " + settings.SnoozeMinutes + " min", settings.Language), snooze));
+                if (!preview) actions.Controls.Add(Ui.Button(Locale.T("Skip", settings.Language), skip));
                 actions.Padding = new Padding(preview ? 180 : 100, 0, 0, 0);
                 card.Controls.Add(actions);
             }

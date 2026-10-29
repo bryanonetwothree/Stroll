@@ -28,7 +28,8 @@ namespace Stroll
         [DataMember] public double SnoozeMinutes = 3;
         [DataMember] public bool WarningEnabled = true;
         [DataMember] public int WarningSeconds = 30;
-        [DataMember] public string BackgroundColor = "#172B29";
+        public const string DefaultBackgroundColor = "#F2EAAA";
+        [DataMember] public string BackgroundColor = DefaultBackgroundColor;
         [DataMember] public string BackgroundImage = "";
         [DataMember] public string WalkImage = "builtin:john";
         [DataMember] public string JumpImage = "builtin:john";
@@ -41,6 +42,7 @@ namespace Stroll
         [DataMember] public int PetCount = 1;
         [DataMember] public bool FadeEnabled = true;
         [DataMember] public int FadeMilliseconds = 400;
+        [DataMember] public string Language = "en";
         [DataMember] public List<PetPreset> ScreenPets;
         public double FadeSeconds { get { return FadeEnabled ? FadeMilliseconds / 1000.0 : 0; } }
         public PetPreset[] VisiblePets()
@@ -80,7 +82,7 @@ namespace Stroll
         // DataContract does not run field initializers. Preserve v1 artwork/timings,
         // and explicitly default only the new fields when reading older settings.
         [OnDeserializing] private void BeforeLoad(StreamingContext context)
-        { PetCount = 1; FadeEnabled = true; FadeMilliseconds = 400; CardX = CardY = -1; Pets = new List<PetPreset>(); DeletedPets = new List<PetPreset>(); }
+        { PetCount = 1; FadeEnabled = true; FadeMilliseconds = 400; Language = "en"; BackgroundColor = DefaultBackgroundColor; CardX = CardY = -1; Pets = new List<PetPreset>(); DeletedPets = new List<PetPreset>(); }
         public static readonly string Folder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Stroll");
         public static string FilePath { get { return Path.Combine(Folder, "settings.json"); } }
@@ -102,7 +104,8 @@ namespace Stroll
             return new[] {
                 new PetPreset { Name = "John", WalkImage = "builtin:john", JumpImage = "builtin:john" },
                 new PetPreset { Name = "S-Yosef", WalkImage = "", JumpImage = "" },
-                new PetPreset { Name = "Smooth St Bernard", WalkImage = "builtin:smooth", JumpImage = "builtin:smooth" }
+                new PetPreset { Name = "Smooth St Bernard", WalkImage = "builtin:smooth", JumpImage = "builtin:smooth" },
+                new PetPreset { Name = "J-Yosef", WalkImage = "builtin:jyosef", JumpImage = "builtin:jyosef" }
             };
         }
         public void Validate()
@@ -126,9 +129,11 @@ namespace Stroll
             DeletedPets = DeletedPets.Where(p => p != null && !string.IsNullOrWhiteSpace(p.Name)).ToList();
             foreach (var pet in DeletedPets) pet.Name = Renamed(pet.Name, pet.WalkImage);
             Pets = Pets.GroupBy(pet => pet.Key).Select(group => group.First()).ToList();
+            Language = Language == "zh-HK" ? "zh-HK" : "en";
             Edges &= 15; if (Edges == 0) Edges = 1;
-            try { ColorTranslator.FromHtml(BackgroundColor); } catch { BackgroundColor = "#172B29"; }
-            if (string.IsNullOrWhiteSpace(BackgroundColor)) BackgroundColor = "#172B29";
+            try { ColorTranslator.FromHtml(BackgroundColor); } catch { BackgroundColor = DefaultBackgroundColor; }
+            if (string.IsNullOrWhiteSpace(BackgroundColor)) BackgroundColor = DefaultBackgroundColor;
+            if (string.Equals(BackgroundColor, "#172B29", StringComparison.OrdinalIgnoreCase)) BackgroundColor = DefaultBackgroundColor;
             if (string.IsNullOrWhiteSpace(Message)) Message = "Look far. Relax your eyes.";
             if (string.IsNullOrWhiteSpace(PetName)) PetName = "S-Yosef";
         }
