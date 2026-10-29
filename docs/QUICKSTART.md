@@ -7,6 +7,8 @@
 5. Choose **Preview break** to try the screen; Esc closes preview.
 6. Choose **Save settings**. Close the window; Stroll continues in the tray.
 
+Use the globe button at the top right to switch between English and Cantonese (Hong Kong). The choice is saved with settings. The default break-screen background is `#F2EAAA`; **Set to default** restores it.
+
 When the prompt appears:
 
 - **Break:** start the full break, covering every monitor.
