@@ -131,8 +131,11 @@ namespace Stroll
             Pets = Pets.GroupBy(pet => pet.Key).Select(group => group.First()).ToList();
             Language = Language == "zh-HK" ? "zh-HK" : "en";
             Edges &= 15; if (Edges == 0) Edges = 1;
-            try { ColorTranslator.FromHtml(BackgroundColor); } catch { BackgroundColor = DefaultBackgroundColor; }
-            if (string.IsNullOrWhiteSpace(BackgroundColor)) BackgroundColor = DefaultBackgroundColor;
+            // ColorTranslator.FromHtml may return Color.Empty for an unknown
+            // name instead of throwing. Stored picker colours are #RRGGBB.
+            if (string.IsNullOrWhiteSpace(BackgroundColor) || BackgroundColor.Length != 7 ||
+                BackgroundColor[0] != '#' || !BackgroundColor.Skip(1).All(Uri.IsHexDigit))
+                BackgroundColor = DefaultBackgroundColor;
             if (string.Equals(BackgroundColor, "#172B29", StringComparison.OrdinalIgnoreCase)) BackgroundColor = DefaultBackgroundColor;
             if (string.IsNullOrWhiteSpace(Message)) Message = "Look far. Relax your eyes.";
             if (string.IsNullOrWhiteSpace(PetName)) PetName = "S-Yosef";
