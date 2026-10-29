@@ -108,7 +108,10 @@ public static class CoreTests
         var oldName = new Settings { PetName = "Yosef" }; oldName.Validate(); Check(oldName.PetName == "J-Yosef", "Yosef name migration");
         var collection = new Settings { PetName = "Yosef", WalkImage = "imported.gif", JumpImage = "" };
         collection.SavePet("Yosef"); collection.Validate();
-        Check(collection.AvailablePets().Count(p => p.Name == "J-Yosef") == 1 && collection.AvailablePets().Any(p => p.Name == "John" && p.WalkImage == "builtin:john"), "Imported Yosef and bundled John are distinct");
+        Check(collection.AvailablePets().Count(p => p.Name == "J-Yosef") == 2 &&
+            collection.AvailablePets().Any(p => p.Name == "J-Yosef" && p.WalkImage == "imported.gif") &&
+            collection.AvailablePets().Any(p => p.Name == "J-Yosef" && p.WalkImage == "builtin:jyosef") &&
+            collection.AvailablePets().Any(p => p.Name == "John" && p.WalkImage == "builtin:john"), "Imported Yosef, bundled J-Yosef and bundled John are distinct");
         var corrected = new Settings { PetName = "J-Yosef", WalkImage = "builtin:john" }; corrected.Validate(); Check(corrected.PetName == "John", "Correct earlier bundled John rename");
         collection.ScreenPets = new System.Collections.Generic.List<PetPreset> { collection.CurrentPet() };
         var removed = collection.CurrentPet(); Check(collection.DeletePet(removed), "Delete saved pet");
