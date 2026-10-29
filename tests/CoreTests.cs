@@ -121,7 +121,9 @@ public static class CoreTests
         { serializer.WriteObject(stream, collection); stream.Position = 0; var loaded = (Settings)serializer.ReadObject(stream); loaded.Validate(); Check(!loaded.AvailablePets().Any(p => p.Key == john.Key || p.Key == removed.Key), "Deleted pets remain absent after reload"); }
         var collectionCopy = collection.Copy(); collectionCopy.DeletedPets[0].Name = "Draft"; Check(collection.DeletedPets[0].Name == removed.Name, "Deleted list isolated in draft");
         collection.RestoreBuiltIns(); Check(collection.AvailablePets().Any(p => p.Key == john.Key) && !collection.AvailablePets().Any(p => p.Key == removed.Key), "Restore brings back only built-ins");
-        collection.DeletePet(Settings.BuiltInPets()[0]); collection.DeletePet(Settings.BuiltInPets()[1]); Check(!collection.DeletePet(collection.AvailablePets()[0]), "Keep last available pet");
+        collection.DeletePet(Settings.BuiltInPets()[0]); collection.DeletePet(Settings.BuiltInPets()[1]);
+        collection.DeletePet(Settings.BuiltInPets()[2]);
+        Check(!collection.DeletePet(Settings.BuiltInPets()[3]), "Keep last available pet");
         Console.WriteLine("PASS · " + assertions + " assertions: timer transitions, warnings, pause, settings and all 15 edge combinations.");
         return 0;
     }
